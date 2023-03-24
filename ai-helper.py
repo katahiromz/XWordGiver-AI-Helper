@@ -10,9 +10,10 @@ import asyncio
 import os
 import time
 import pyperclip
+import sys
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.8"
+AI_HELPER_VERSION = "1.9"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -47,24 +48,30 @@ TAGS = "芸術,生活,道具,政治,災害,映画,算数,人体,感情,仕事,�
 
 #############################################################################
 
-# グローバル変数。
-global entry1
-global text1
-global text2
-global text3
+root = None
+thread1 = thread2 = thread3 = None
 
 # テキスト1をセット。
 def do_set_text_1(str):
+    global root, text1
+    if root is None:
+        return
     text1.delete("1.0", "end")
     text1.insert("1.0", str)
 
 # テキスト2をセット。
 def do_set_text_2(str):
+    global root, text2
+    if root is None:
+        return
     text2.delete("1.0", "end")
     text2.insert("1.0", str)
 
 # テキスト3をセット。
 def do_set_text_3(str):
+    global root, text3
+    if root is None:
+        return
     text3.delete("1.0", "end")
     text3.insert("1.0", str)
 
@@ -99,6 +106,7 @@ def do_line(line):
 
 # ヒント文章の生成。
 def do_openai_1(text):
+    global thread1
     try:
         do_try = True
         while do_try:
@@ -128,7 +136,11 @@ def do_openai_1(text):
                 new_text += do_line(line).strip() + "\n"
             # 出力。
             do_set_text_1(new_text)
+            # スレッドを無効化。
+            thread1 = None
     except Exception as e:
+        if thread1 is None:
+            return
         if type(e).__name__.strip() == "Timeout":
             do_set_text_1('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
@@ -136,6 +148,7 @@ def do_openai_1(text):
 
 # 説明文の生成。
 def do_openai_2(text):
+    global thread2
     try:
         # API問合せの前に待つ。
         time.sleep(API_WAIT * 1)
@@ -154,7 +167,11 @@ def do_openai_2(text):
         str = response.choices[0]["message"]["content"].strip()
         # 出力。
         do_set_text_2(str)
+        # スレッドを無効化。
+        thread2 = None
     except Exception as e:
+        if thread2 is None:
+            return
         if type(e).__name__.strip() == "Timeout":
             do_set_text_2('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
@@ -162,6 +179,7 @@ def do_openai_2(text):
 
 # カテゴリータグの生成。
 def do_openai_3(text):
+    global thread3
     try:
         # API問合せの前に待つ。
         time.sleep(API_WAIT * 2)
@@ -197,7 +215,11 @@ def do_openai_3(text):
         # 出力。
         str = str.strip()
         do_set_text_3(str)
+        # スレッドを無効化。
+        thread3 = None
     except Exception as e:
+        if thread3 is None:
+            return
         if type(e).__name__.strip() == "Timeout":
             do_set_text_3('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
@@ -205,24 +227,30 @@ def do_openai_3(text):
 
 # 実際の処理。
 def do_work(text):
+    global thread1, thread2, thread3
     import threading
     do_set_text_1("(生成中...)")
     thread1 = threading.Thread(target=do_openai_1, args=(text,))
+    thread1.daemon = True
     thread1.start()
     do_set_text_2("(生成中...)")
     thread2 = threading.Thread(target=do_openai_2, args=(text,))
+    thread2.daemon = True
     thread2.start()
     do_set_text_3("(生成中...)")
     thread3 = threading.Thread(target=do_openai_3, args=(text,))
+    thread3.daemon = True
     thread3.start()
 
 # 生成アクション。
 def on_button1(e=None):
+    global entry1
     text = entry1.get()
     do_work(text)
 
 # リセットボタンのアクション。
 def on_button2():
+    global entry1, text1, text2, text3
     entry1.delete(0, tk.END)
     text1.delete("1.0", tk.END)
     text2.delete("1.0", tk.END)
@@ -230,21 +258,34 @@ def on_button2():
 
 # コピーボタンのアクション。
 def on_button3():
+    global text1
     str = text1.get("1.0", "end")
     str = str.strip()
     pyperclip.copy(str)
 
 # コピーボタンのアクション。
 def on_button4():
+    global text2
     str = text2.get("1.0", "end")
     str = str.strip()
     pyperclip.copy(str)
 
 # コピーボタンのアクション。
 def on_button5():
+    global text3
     str = text3.get("1.0", "end")
     str = str.strip()
     pyperclip.copy(str)
+
+# 終了時の処理を指定。
+def on_quit():
+    global root, thread1, thread2, thread3
+    thread1 = thread2 = thread3 = None
+    if not(root is None):
+        root.quit()
+        root.destroy()
+        root = None
+    sys.exit(0)
 
 # GUIウィンドウの作成。
 root = tk.Tk()
@@ -328,6 +369,9 @@ if True:
 # カテゴリータグ用の複数行テキストボックスの作成。
 text3 = tk.Text(root, relief="sunken", bg="#cccccc")
 text3.pack(side="top")
+
+# 終了時の処理を指定。
+root.protocol('WM_DELETE_WINDOW', on_quit)
 
 # GUIの起動。
 root.mainloop()
