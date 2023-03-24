@@ -11,9 +11,10 @@ import os
 import time
 import pyperclip
 import sys
+import threading
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.9"
+AI_HELPER_VERSION = "2.0"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -49,7 +50,13 @@ TAGS = "芸術,生活,道具,政治,災害,映画,算数,人体,感情,仕事,�
 #############################################################################
 
 root = None
-thread1 = thread2 = thread3 = None
+thread1 = thread2 = thread3 = thread4 = None
+
+# 「単語」テキストを取得。
+def get_text():
+    global entry1
+    text = entry1.get()
+    return text
 
 # テキスト1をセット。
 def do_set_text_1(str):
@@ -74,6 +81,14 @@ def do_set_text_3(str):
         return
     text3.delete("1.0", "end")
     text3.insert("1.0", str)
+
+# テキスト4をセット。
+def do_set_text_4(str):
+    global root, text3
+    if root is None:
+        return
+    entry2.delete(0, tk.END)
+    entry2.insert(tk.END, str)
 
 # 行を処理する。
 def do_line(line):
@@ -105,13 +120,14 @@ def do_line(line):
     return line
 
 # ヒント文章の生成。
-def do_openai_1(text):
+def do_openai_1(text, wait=0):
     global thread1
     try:
         do_try = True
         while do_try:
-            # API問合せの前に待つ。
-            time.sleep(API_WAIT * 0)
+            if wait != 0:
+                # API問合せの前に待つ。
+                time.sleep(wait)
             # 問合せ文字列を表示する。
             query = "テキスト「{}」から{}字未満のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
             query += "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"
@@ -145,13 +161,16 @@ def do_openai_1(text):
             do_set_text_1('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_1('ERROR: 例外発生: ', type(e).__name__)
+        # スレッドを無効化。
+        thread1 = None
 
 # 説明文の生成。
-def do_openai_2(text):
+def do_openai_2(text, wait=0):
     global thread2
     try:
-        # API問合せの前に待つ。
-        time.sleep(API_WAIT * 1)
+        if wait != 0:
+            # API問合せの前に待つ。
+            time.sleep(API_WAIT * 1)
         # 問合せ文字列を表示する。
         query = "テキスト「{}」から{}字未満の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
         do_set_text_2("問合せ中: " + query)
@@ -176,13 +195,16 @@ def do_openai_2(text):
             do_set_text_2('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_2('ERROR: 例外発生: ', type(e).__name__)
+        # スレッドを無効化。
+        thread2 = None
 
 # カテゴリータグの生成。
-def do_openai_3(text):
+def do_openai_3(text, wait=0):
     global thread3
     try:
-        # API問合せの前に待つ。
-        time.sleep(API_WAIT * 2)
+        if wait != 0:
+            # API問合せの前に待つ。
+            time.sleep(wait)
         # 各タグを[ ]で囲む。
         str = "[" + TAGS.replace(',', '],[') + "]"
         tags = str.split(',')
@@ -224,28 +246,78 @@ def do_openai_3(text):
             do_set_text_3('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_3('ERROR: 例外発生: ', type(e).__name__)
+        # スレッドを無効化。
+        thread3 = None
+
+# カタカナ表記の生成。
+def do_openai_4(text, wait=0):
+    global thread4
+    try:
+        if wait != 0:
+            # API問合せの前に待つ。
+            time.sleep(wait)
+        # 問合せ文字列を表示する。
+        query = "テキスト「{}」をカタカナ表記にして下さい。".format(text)
+        do_set_text_4("問合せ中: " + query)
+        # 実際に問合せを行う。
+        response = openai.ChatCompletion.create(
+            model=MODEL,
+            messages=[
+                {"role": "user", "content": query},
+            ],
+            request_timeout = MAX_TIME,
+        )
+        # AIからの返信を取得する。
+        str = response.choices[0]["message"]["content"].strip()
+        # 拗音を拗音ではない文字にする。
+        str = str.replace("ァ", "ア")
+        str = str.replace("ィ", "イ")
+        str = str.replace("ゥ", "ウ")
+        str = str.replace("ェ", "エ")
+        str = str.replace("ォ", "オ")
+        str = str.replace("ヶ", "ケ")
+        str = str.replace("ッ", "ツ")
+        str = str.replace("ャ", "ヤ")
+        str = str.replace("ュ", "ユ")
+        str = str.replace("ョ", "ヨ")
+        str = str.replace("ヮ", "ワ")
+        # 出力。
+        do_set_text_4(str)
+        # スレッドを無効化。
+        thread4 = None
+    except Exception as e:
+        if thread4 is None:
+            return
+        if type(e).__name__.strip() == "Timeout":
+            do_set_text_4('ERROR: API問合せの時間切れです（課金すれば？）。')
+        else:
+            do_set_text_4('ERROR: 例外発生: ', type(e).__name__)
+        # スレッドを無効化。
+        thread4 = None
 
 # 実際の処理。
 def do_work(text):
-    global thread1, thread2, thread3
-    import threading
+    global thread1, thread2, thread3, thread4
     do_set_text_1("(生成中...)")
-    thread1 = threading.Thread(target=do_openai_1, args=(text,))
+    thread1 = threading.Thread(target=do_openai_1, args=(text, API_WAIT * 0, ))
     thread1.daemon = True
     thread1.start()
     do_set_text_2("(生成中...)")
-    thread2 = threading.Thread(target=do_openai_2, args=(text,))
+    thread2 = threading.Thread(target=do_openai_2, args=(text, API_WAIT * 1, ))
     thread2.daemon = True
     thread2.start()
     do_set_text_3("(生成中...)")
-    thread3 = threading.Thread(target=do_openai_3, args=(text,))
+    thread3 = threading.Thread(target=do_openai_3, args=(text, API_WAIT * 2, ))
     thread3.daemon = True
     thread3.start()
+    do_set_text_4("(生成中...)")
+    thread4 = threading.Thread(target=do_openai_4, args=(text, API_WAIT * 3, ))
+    thread4.daemon = True
+    thread4.start()
 
 # 生成アクション。
 def on_button1(e=None):
-    global entry1
-    text = entry1.get()
+    text = get_text()
     do_work(text)
 
 # リセットボタンのアクション。
@@ -277,10 +349,61 @@ def on_button5():
     str = str.strip()
     pyperclip.copy(str)
 
+# コピーボタンのアクション。
+def on_button6():
+    global entry2
+    str = entry2.get()
+    str = str.strip()
+    pyperclip.copy(str)
+
+# 再試行ボタンのアクション。
+def on_button7():
+    global thread1
+    if not(thread1 is None):
+        return
+    do_set_text_1("(生成中...)")
+    text = get_text()
+    thread1 = threading.Thread(target=do_openai_1, args=(text, 0, ))
+    thread1.daemon = True
+    thread1.start()
+
+# 再試行ボタンのアクション。
+def on_button8():
+    global thread2
+    if not(thread2 is None):
+        return
+    do_set_text_2("(生成中...)")
+    text = get_text()
+    thread2 = threading.Thread(target=do_openai_2, args=(text, 0, ))
+    thread2.daemon = True
+    thread2.start()
+
+# 再試行ボタンのアクション。
+def on_button9():
+    global thread3
+    if not(thread3 is None):
+        return
+    do_set_text_3("(生成中...)")
+    text = get_text()
+    thread3 = threading.Thread(target=do_openai_3, args=(text, 0, ))
+    thread3.daemon = True
+    thread3.start()
+
+# 再試行ボタンのアクション。
+def on_button10():
+    global thread4
+    if not(thread4 is None):
+        return
+    do_set_text_4("(生成中...)")
+    text = get_text()
+    thread4 = threading.Thread(target=do_openai_4, args=(text, 0, ))
+    thread4.daemon = True
+    thread4.start()
+
 # 終了時の処理を指定。
 def on_quit():
-    global root, thread1, thread2, thread3
-    thread1 = thread2 = thread3 = None
+    global root, thread1, thread2, thread3, thread4
+    thread1 = thread2 = thread3 = thread4 = None
     if not(root is None):
         root.quit()
         root.destroy()
@@ -302,7 +425,7 @@ if True:
     label1 = tk.Label(frame1, text="単語を入力して下さい:")
     label1.pack(side="left")
 
-    # テキストボックスの作成
+    # テキストボックスの作成。
     entry1 = tk.Entry(frame1, relief="sunken")
     entry1.pack(side="left")
     entry1.focus_set()
@@ -330,6 +453,10 @@ if True:
     button3 = tk.Button(frame2, text="コピー", command=on_button3)
     button3.pack(side="left")
 
+    # 再試行ボタン。
+    button7 = tk.Button(frame2, text="再試行", command=on_button7)
+    button7.pack(side="left")
+
 # ヒント文章用の複数行テキストボックスの作成。
 text1 = tk.Text(root, relief="sunken", bg="#cccccc", height=7)
 text1.pack(side="top")
@@ -347,6 +474,10 @@ if True:
     # コピーボタン。
     button4 = tk.Button(frame3, text="コピー", command=on_button4)
     button4.pack(side="left")
+
+    # 再試行ボタン。
+    button8 = tk.Button(frame3, text="再試行", command=on_button8)
+    button8.pack(side="left")
 
 # 説明用の複数行テキストボックスの作成。
 text2 = tk.Text(root, relief="sunken", bg="#cccccc", height=7)
@@ -366,9 +497,35 @@ if True:
     button5 = tk.Button(frame4, text="コピー", command=on_button5)
     button5.pack(side="left")
 
+    # 再試行ボタン。
+    button9 = tk.Button(frame4, text="再試行", command=on_button9)
+    button9.pack(side="left")
+
 # カテゴリータグ用の複数行テキストボックスの作成。
-text3 = tk.Text(root, relief="sunken", bg="#cccccc")
+text3 = tk.Text(root, relief="sunken", bg="#cccccc", height=5)
 text3.pack(side="top")
+
+# フレーム5の作成。
+frame5 = tk.Frame(root)
+frame5.pack(side="top")
+
+# フレーム5の内部を作成。
+if True:
+    # ラベルの作成。
+    label5 = tk.Label(frame5, text="カタカナ表記:")
+    label5.pack(side="left")
+
+    # テキストボックスの作成。
+    entry2 = tk.Entry(frame5, relief="sunken")
+    entry2.pack(side="left")
+
+    # コピーボタン。
+    button6 = tk.Button(frame5, text="コピー", command=on_button6)
+    button6.pack(side="left")
+
+    # 再試行ボタン。
+    button10 = tk.Button(frame5, text="再試行", command=on_button10)
+    button10.pack(side="left")
 
 # 終了時の処理を指定。
 root.protocol('WM_DELETE_WINDOW', on_quit)
