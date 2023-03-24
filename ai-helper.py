@@ -11,7 +11,7 @@ import os
 import time
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.3"
+AI_HELPER_VERSION = "1.4"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
@@ -101,10 +101,13 @@ def do_openai_1(text):
     try:
         do_try = True
         while do_try:
+            # API問合せの前に待つ。
             time.sleep(API_WAIT * 0)
+            # 問合せ文字列を表示する。
             query = "テキスト「{}」から{}字程度のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
             query += "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"
             do_set_text_1("問合せ中: " + query)
+            # 実際に問合せを行う。
             response = openai.ChatCompletion.create(
                 model=MODEL,
                 messages=[
@@ -112,7 +115,6 @@ def do_openai_1(text):
                 ],
                 request_timeout = MAX_TIME,
             )
-            do_set_text_1(query)
             # AIからの返信を取得する。
             str = response.choices[0]["message"]["content"].strip()
             if (text in str):
@@ -134,9 +136,12 @@ def do_openai_1(text):
 # 説明文の生成。
 def do_openai_2(text):
     try:
+        # API問合せの前に待つ。
         time.sleep(API_WAIT * 1)
+        # 問合せ文字列を表示する。
         query = "テキスト「{}」から{}字程度の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
         do_set_text_2("問合せ中: " + query)
+        # 実際に問合せを行う。
         response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
@@ -157,15 +162,20 @@ def do_openai_2(text):
 # カテゴリータグの生成。
 def do_openai_3(text):
     try:
+        # API問合せの前に待つ。
         time.sleep(API_WAIT * 2)
-        tags = TAGS.split(',')
+        # 各タグを[ ]で囲む。
+        str = "[" + TAGS.replace(',', '],[') + "]"
+        tags = str.split(',')
         tags_text = ""
         tags_num = 0
         for tag in tags:
-            tags_text += "「[" + tag + "]」"
+            tags_text += "「" + tag + "」"
             tags_num += 1
+        # 問合せ文字列を表示する。
         query = "カテゴリータグは{}の{}個です。テキスト「{}」に当てはまるカテゴリータグ（複数可、なるべく多く）をカンマ区切りで出力して下さい。".format(tags_text, tags_num, text)
         do_set_text_3("問合せ中: " + query)
+        # 実際に問合せを行う。
         response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
@@ -175,8 +185,16 @@ def do_openai_3(text):
         )
         # AIからの返信を取得する。
         str = response.choices[0]["message"]["content"].strip()
+        # タグの存在確認。
         str = str.replace(', ', ',').replace(',', "\t")
+        generated_tags = str.split("\t")
+        str = ""
+        for tag in generated_tags:
+            if tag in tags:
+                str += tag
+                str += "\t"
         # 出力。
+        str = str.strip()
         do_set_text_3(str)
     except Exception as e:
         if type(e).__name__.strip() == "Timeout":
