@@ -9,9 +9,10 @@ import openai
 import asyncio
 import os
 import time
+import pyperclip
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.6"
+AI_HELPER_VERSION = "1.7"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
@@ -220,30 +221,30 @@ def on_button1(e=None):
     text = entry1.get()
     do_work(text)
 
-# コピーボタンのアクション。
-def on_button3():
-    str = text1.get("1.0", "end")
-    import pyperclip
-    pyperclip.copy(str)
-
-# コピーボタンのアクション。
-def on_button4():
-    str = text2.get("1.0", "end")
-    import pyperclip
-    pyperclip.copy(str)
-
-# コピーボタンのアクション。
-def on_button5():
-    str = text3.get("1.0", "end")
-    import pyperclip
-    pyperclip.copy(str)
-
 # リセットボタンのアクション。
 def on_button2():
     entry1.delete(0, tk.END)
     text1.delete("1.0", tk.END)
     text2.delete("1.0", tk.END)
     text3.delete("1.0", tk.END)
+
+# コピーボタンのアクション。
+def on_button3():
+    str = text1.get("1.0", "end")
+    str = str.strip()
+    pyperclip.copy(str)
+
+# コピーボタンのアクション。
+def on_button4():
+    str = text2.get("1.0", "end")
+    str = str.strip()
+    pyperclip.copy(str)
+
+# コピーボタンのアクション。
+def on_button5():
+    str = text3.get("1.0", "end")
+    str = str.strip()
+    pyperclip.copy(str)
 
 # GUIウィンドウの作成。
 root = tk.Tk()
