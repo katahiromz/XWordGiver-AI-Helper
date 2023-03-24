@@ -15,7 +15,7 @@ import threading
 import pykakasi
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "2.2"
+AI_HELPER_VERSION = "2.3"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -519,7 +519,7 @@ if True:
     label5.pack(side="left")
 
     # テキストボックスの作成。
-    entry2 = tk.Entry(frame5, relief="sunken")
+    entry2 = tk.Entry(frame5, relief="sunken", bg="#cccccc")
     entry2.pack(side="left")
 
     # コピーボタン。
