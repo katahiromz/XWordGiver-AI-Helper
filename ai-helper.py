@@ -15,7 +15,7 @@ import threading
 import pykakasi
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "2.1"
+AI_HELPER_VERSION = "2.2"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -56,7 +56,7 @@ thread1 = thread2 = thread3 = thread4 = None
 # 「単語」テキストを取得。
 def get_text():
     global entry1
-    text = entry1.get()
+    text = entry1.get().strip()
     return text
 
 # テキスト1をセット。
