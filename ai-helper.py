@@ -15,7 +15,7 @@ import threading
 import pykakasi
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "2.3"
+AI_HELPER_VERSION = "2.4"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -330,6 +330,7 @@ def on_button2():
     text1.delete("1.0", tk.END)
     text2.delete("1.0", tk.END)
     text3.delete("1.0", tk.END)
+    entry2.delete(0, tk.END)
 
 # コピーボタンのアクション。
 def on_button3():
