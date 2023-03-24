@@ -12,15 +12,15 @@ import time
 import pyperclip
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.7"
+AI_HELPER_VERSION = "1.8"
 
 #############################################################################
-# APIヘルパーの設定。変更しても構いません。
+# APIヘルパーの設定。自由に変更しても構いません。
 
 # CharGPTのAPIキー。環境変数「XW_OPENAI_API_KEY」から取得。
 openai.api_key = os.environ["XW_OPENAI_API_KEY"]
 
-# ChatAPIのモデル。
+# ChatGPTのモデル。
 MODEL = "gpt-3.5-turbo"
 #MODEL = "text-davinci-002"
 
@@ -105,7 +105,7 @@ def do_openai_1(text):
             # API問合せの前に待つ。
             time.sleep(API_WAIT * 0)
             # 問合せ文字列を表示する。
-            query = "テキスト「{}」から{}字程度のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
+            query = "テキスト「{}」から{}字未満のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
             query += "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"
             do_set_text_1("問合せ中: " + query)
             # 実際に問合せを行う。
@@ -140,7 +140,7 @@ def do_openai_2(text):
         # API問合せの前に待つ。
         time.sleep(API_WAIT * 1)
         # 問合せ文字列を表示する。
-        query = "テキスト「{}」から{}字程度の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
+        query = "テキスト「{}」から{}字未満の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
         do_set_text_2("問合せ中: " + query)
         # 実際に問合せを行う。
         response = openai.ChatCompletion.create(
