@@ -4,7 +4,7 @@ import asyncio
 import os
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.0"
+AI_HELPER_VERSION = "1.1"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
@@ -31,7 +31,7 @@ MAX_HINT_CANDIDATES = 3
 # 説明文の候補の個数。
 MAX_DESC_CANDIDATES = 2
 
-# API呼び出しの待ち時間（秒）。
+# API問合せの待ち時間（秒）。
 API_WAIT = 8
 
 # タグをカンマ区切りで指定。
@@ -93,11 +93,11 @@ def do_openai_1(text):
         do_try = True
         while do_try:
             query = "テキスト「{}」から{}字程度のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
+            query += "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"
+            do_set_text_1("問合せ中: " + query)
             response = openai.ChatCompletion.create(
                 model=MODEL,
                 messages=[
-                    {"role": "system", "content": "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"},
-                    {"role": "system", "content": "不適切な言葉があれば「ERROR: 不適切な言葉です。」を追記して下さい。"},
                     {"role": "user", "content": query},
                 ],
                 request_timeout = MAX_TIME,
@@ -117,7 +117,7 @@ def do_openai_1(text):
             do_set_text_1(new_text)
     except Exception as e:
         if type(e).__name__.strip() == "Timeout":
-            do_set_text_1('ERROR: API呼び出しの時間切れです（課金すれば？）。')
+            do_set_text_1('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_1('ERROR: 例外発生: ', type(e).__name__)
 
@@ -127,7 +127,7 @@ def do_openai_2(text):
         import time
         time.sleep(API_WAIT)
         query = "テキスト「{}」から{}字程度の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
-        do_set_text_2(query)
+        do_set_text_2("問合せ中: " + query)
         response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
@@ -141,7 +141,7 @@ def do_openai_2(text):
         do_set_text_2(str)
     except Exception as e:
         if type(e).__name__.strip() == "Timeout":
-            do_set_text_2('ERROR: API呼び出しの時間切れです（課金すれば？）。')
+            do_set_text_2('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_2('ERROR: 例外発生: ', type(e).__name__)
 
@@ -157,7 +157,7 @@ def do_openai_3(text):
             tags_text += "「[" + tag + "]」"
             tags_num += 1
         query = "カテゴリータグは{}の{}個です。テキスト「{}」に当てはまるカテゴリータグ（複数可、なるべく多く）をカンマ区切りで出力して下さい。".format(tags_text, tags_num, text)
-        do_set_text_3(query)
+        do_set_text_3("問合せ中: " + query)
         response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
@@ -172,7 +172,7 @@ def do_openai_3(text):
         do_set_text_3(str)
     except Exception as e:
         if type(e).__name__.strip() == "Timeout":
-            do_set_text_3('ERROR: API呼び出しの時間切れです（課金すれば？）。')
+            do_set_text_3('ERROR: API問合せの時間切れです（課金すれば？）。')
         else:
             do_set_text_3('ERROR: 例外発生: ', type(e).__name__)
 
@@ -204,6 +204,8 @@ def copyText():
 def resetText():
     entry1.delete(0, tk.END)
     text1.delete("1.0", tk.END)
+    text2.delete("1.0", tk.END)
+    text3.delete("1.0", tk.END)
 
 # GUIウィンドウの作成。
 root = tk.Tk()
