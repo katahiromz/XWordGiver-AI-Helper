@@ -11,7 +11,7 @@ import os
 import time
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.5"
+AI_HELPER_VERSION = "1.6"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
@@ -216,18 +216,30 @@ def do_work(text):
     thread3.start()
 
 # 生成アクション。
-def onGenerate(e=None):
+def on_button1(e=None):
     text = entry1.get()
     do_work(text)
 
 # コピーボタンのアクション。
-def copyText():
+def on_button3():
     str = text1.get("1.0", "end")
     import pyperclip
     pyperclip.copy(str)
 
+# コピーボタンのアクション。
+def on_button4():
+    str = text2.get("1.0", "end")
+    import pyperclip
+    pyperclip.copy(str)
+
+# コピーボタンのアクション。
+def on_button5():
+    str = text3.get("1.0", "end")
+    import pyperclip
+    pyperclip.copy(str)
+
 # リセットボタンのアクション。
-def resetText():
+def on_button2():
     entry1.delete(0, tk.END)
     text1.delete("1.0", tk.END)
     text2.delete("1.0", tk.END)
@@ -238,55 +250,79 @@ root = tk.Tk()
 root.title("AIヘルパー Ver." + AI_HELPER_VERSION + " - クロスワード ギバー")
 root.geometry("500x400")
 
-# フレームの作成。
-frame = tk.Frame(root)
-frame.pack(side="top")
+# フレーム1の作成。
+frame1 = tk.Frame(root)
+frame1.pack(side="top")
 
-# フレームの内部を作成。
-try:
+# フレーム1の内部を作成。
+if True:
     # ラベルの作成。
-    label1 = tk.Label(frame, text="単語を入力して下さい:")
+    label1 = tk.Label(frame1, text="単語を入力して下さい:")
     label1.pack(side="left")
 
     # テキストボックスの作成
-    entry1 = tk.Entry(frame, relief="sunken")
+    entry1 = tk.Entry(frame1, relief="sunken")
     entry1.pack(side="left")
     entry1.focus_set()
-    entry1.bind('<Return>', onGenerate)
+    entry1.bind('<Return>', on_button1)
 
     # 「生成」ボタン。
-    button1 = tk.Button(frame, text="生成", command=onGenerate)
+    button1 = tk.Button(frame1, text="生成", command=on_button1)
     button1.pack(side="left")
 
     # リセットボタン。
-    button2 = tk.Button(frame, text="リセット", command=resetText)
+    button2 = tk.Button(frame1, text="リセット", command=on_button2)
     button2.pack(side="left")
 
-    # コピーボタン。
-    button3 = tk.Button(frame, text="結果のコピー", command=copyText)
-    button3.pack(side="left")
-except:
-    pass
+# フレーム2の作成。
+frame2 = tk.Frame(root)
+frame2.pack(side="top")
 
-# ラベルの作成。
-label2 = tk.Label(root, text="ヒント文章:")
-label2.pack(side="top")
+# フレーム2の内部を作成。
+if True:
+    # ラベルの作成。
+    label2 = tk.Label(frame2, text="ヒント文章:")
+    label2.pack(side="left")
+
+    # コピーボタン。
+    button3 = tk.Button(frame2, text="コピー", command=on_button3)
+    button3.pack(side="left")
 
 # ヒント文章用の複数行テキストボックスの作成。
 text1 = tk.Text(root, relief="sunken", bg="#cccccc", height=7)
 text1.pack(side="top")
 
-# ラベルの作成。
-label3 = tk.Label(root, text="単語の説明:")
-label3.pack(side="top")
+# フレーム3の作成。
+frame3 = tk.Frame(root)
+frame3.pack(side="top")
+
+# フレーム3の内部を作成。
+if True:
+    # ラベルの作成。
+    label3 = tk.Label(frame3, text="単語の説明:")
+    label3.pack(side="left")
+
+    # コピーボタン。
+    button4 = tk.Button(frame3, text="コピー", command=on_button4)
+    button4.pack(side="left")
 
 # 説明用の複数行テキストボックスの作成。
 text2 = tk.Text(root, relief="sunken", bg="#cccccc", height=7)
 text2.pack(side="top")
 
-# ラベルの作成。
-label4 = tk.Label(root, text="カテゴリータグ（タブ区切り）:")
-label4.pack(side="top")
+# フレーム4の作成。
+frame4 = tk.Frame(root)
+frame4.pack(side="top")
+
+# フレーム4の内部を作成。
+if True:
+    # ラベルの作成。
+    label4 = tk.Label(frame4, text="カテゴリータグ（タブ区切り）:")
+    label4.pack(side="left")
+
+    # コピーボタン。
+    button5 = tk.Button(frame4, text="コピー", command=on_button5)
+    button5.pack(side="left")
 
 # カテゴリータグ用の複数行テキストボックスの作成。
 text3 = tk.Text(root, relief="sunken", bg="#cccccc")
