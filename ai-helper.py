@@ -1,15 +1,22 @@
+# ai-helper.py - クロスワード ギバー AI ヘルパー
+#
+# Python+ChatGPTの能力により、クロスワード作成を強力に支援します。
+# 起動には、付属のバッチファイル「ai-helper.bat」をお使い下さい。
+
+# 必要なモジュールのインポート。
 import tkinter as tk
 import openai
 import asyncio
 import os
+import time
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.2"
+AI_HELPER_VERSION = "1.3"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
 
-# OpenAI (CharGPT) APIキー。環境変数「XW_OPENAI_API_KEY」から取得。
+# CharGPTのAPIキー。環境変数「XW_OPENAI_API_KEY」から取得。
 openai.api_key = os.environ["XW_OPENAI_API_KEY"]
 
 # ChatAPIのモデル。
@@ -25,14 +32,14 @@ MAX_DESC_TEXT = 60
 # 時間切れまでの秒数。
 MAX_TIME = 8
 
+# API問合せの待ち時間（秒）。
+API_WAIT = 8
+
 # ヒント候補の個数。
 MAX_HINT_CANDIDATES = 3
 
 # 説明文の候補の個数。
 MAX_DESC_CANDIDATES = 2
-
-# API問合せの待ち時間（秒）。
-API_WAIT = 8
 
 # タグをカンマ区切りで指定。
 TAGS = "芸術,生活,道具,政治,災害,映画,算数,人体,感情,仕事,乗り物,車,自然,英語,家族,生物,国際,電気,学校,店,音楽,職業,建築,恋愛,歴史,海,病気,数学,医療,時間,地理,経営,旅行,論理,金融,趣味,言葉,社会,ファッション,子育て,鳥類,魚類,人間関係,暦,演劇,野球,天気,難解,動物,植物,会社,日本,機械,春,料理,技術,人生,農業,テレビ,夏,食べ物,科学,軍事,宗教,勝負,秋,スポーツ,交通,経済,文学,夜,冬,犯罪,不道徳,不幸,不快,成人向け,放送禁止"
@@ -45,17 +52,17 @@ global text1
 global text2
 global text3
 
-# 生成物をセット。
+# テキスト1をセット。
 def do_set_text_1(str):
     text1.delete("1.0", "end")
     text1.insert("1.0", str)
 
-# 生成物をセット。
+# テキスト2をセット。
 def do_set_text_2(str):
     text2.delete("1.0", "end")
     text2.insert("1.0", str)
 
-# 生成物をセット。
+# テキスト3をセット。
 def do_set_text_3(str):
     text3.delete("1.0", "end")
     text3.insert("1.0", str)
@@ -94,6 +101,7 @@ def do_openai_1(text):
     try:
         do_try = True
         while do_try:
+            time.sleep(API_WAIT * 0)
             query = "テキスト「{}」から{}字程度のクロスワードのヒント文章を{}つ考えて下さい。".format(text, MAX_HINT_TEXT, MAX_HINT_CANDIDATES)
             query += "放送禁止用語があれば「ERROR: 放送禁止用語です。」を追記して下さい。"
             do_set_text_1("問合せ中: " + query)
@@ -126,8 +134,7 @@ def do_openai_1(text):
 # 説明文の生成。
 def do_openai_2(text):
     try:
-        import time
-        time.sleep(API_WAIT)
+        time.sleep(API_WAIT * 1)
         query = "テキスト「{}」から{}字程度の説明文を{}つ考えて下さい。".format(text, MAX_DESC_TEXT, MAX_DESC_CANDIDATES)
         do_set_text_2("問合せ中: " + query)
         response = openai.ChatCompletion.create(
@@ -150,7 +157,6 @@ def do_openai_2(text):
 # カテゴリータグの生成。
 def do_openai_3(text):
     try:
-        import time
         time.sleep(API_WAIT * 2)
         tags = TAGS.split(',')
         tags_text = ""
@@ -218,6 +224,7 @@ root.geometry("500x400")
 frame = tk.Frame(root)
 frame.pack(side="top")
 
+# フレームの内部を作成。
 try:
     # ラベルの作成。
     label1 = tk.Label(frame, text="単語を入力して下さい:")
