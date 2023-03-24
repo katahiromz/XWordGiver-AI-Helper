@@ -3,6 +3,9 @@ import openai
 import asyncio
 import os
 
+# このファイルのバージョン。
+AI_HELPER_VERSION = "1.0"
+
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
 
@@ -204,7 +207,7 @@ def resetText():
 
 # GUIウィンドウの作成。
 root = tk.Tk()
-root.title("AIヘルパー - クロスワード ギバー")
+root.title("AIヘルパー Ver." + AI_HELPER_VERSION + " - クロスワード ギバー")
 root.geometry("500x400")
 
 # フレームの作成。
