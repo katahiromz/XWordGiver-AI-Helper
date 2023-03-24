@@ -4,7 +4,7 @@ import asyncio
 import os
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "1.1"
+AI_HELPER_VERSION = "1.2"
 
 #############################################################################
 # APIヘルパーの設定。変更しても構いません。
@@ -77,8 +77,10 @@ def do_line(line):
     # 丸かっこで囲まれた文字列を削除。
     line = re.sub(r'（.*?）', '', line)
     line = re.sub(r'\(.*?\)', '', line)
+    # 最後の丸を除去する。
+    line = re.sub(r'。$', '', line)
     # 文字数をはずす。
-    line = re.sub(r'[\(（].*?文字[）\)]', '', line)
+    line = re.sub(r'[\(（\[【]\d+文字[）\)\]】]', '', line)
     line = re.sub(r' - \d+文字$', '', line)
     line = re.sub(r'の\d+文字$', '', line)
     # 最後の丸を除去する。
