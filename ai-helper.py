@@ -12,9 +12,10 @@ import time
 import pyperclip
 import sys
 import threading
+import pykakasi
 
 # このファイルのバージョン。
-AI_HELPER_VERSION = "2.0"
+AI_HELPER_VERSION = "2.1"
 
 #############################################################################
 # APIヘルパーの設定。自由に変更しても構いません。
@@ -122,6 +123,10 @@ def do_line(line):
 # ヒント文章の生成。
 def do_openai_1(text, wait=0):
     global thread1
+    if text == '':
+        do_set_text_1("ERROR: 文字列が空です。")
+        thread1 = None
+        return
     try:
         do_try = True
         while do_try:
@@ -167,6 +172,10 @@ def do_openai_1(text, wait=0):
 # 説明文の生成。
 def do_openai_2(text, wait=0):
     global thread2
+    if text == '':
+        do_set_text_2("ERROR: 文字列が空です。")
+        thread2 = None
+        return
     try:
         if wait != 0:
             # API問合せの前に待つ。
@@ -201,6 +210,10 @@ def do_openai_2(text, wait=0):
 # カテゴリータグの生成。
 def do_openai_3(text, wait=0):
     global thread3
+    if text == '':
+        do_set_text_3("ERROR: 文字列が空です。")
+        thread3 = None
+        return
     try:
         if wait != 0:
             # API問合せの前に待つ。
@@ -252,23 +265,16 @@ def do_openai_3(text, wait=0):
 # カタカナ表記の生成。
 def do_openai_4(text, wait=0):
     global thread4
+    if text == '':
+        do_set_text_4("ERROR: 文字列が空です。")
+        thread4 = None
+        return
     try:
         if wait != 0:
-            # API問合せの前に待つ。
+            # 問合せの前に待つ。
             time.sleep(wait)
-        # 問合せ文字列を表示する。
-        query = "テキスト「{}」をカタカナ表記にして下さい。".format(text)
-        do_set_text_4("問合せ中: " + query)
-        # 実際に問合せを行う。
-        response = openai.ChatCompletion.create(
-            model=MODEL,
-            messages=[
-                {"role": "user", "content": query},
-            ],
-            request_timeout = MAX_TIME,
-        )
-        # AIからの返信を取得する。
-        str = response.choices[0]["message"]["content"].strip()
+        kks = pykakasi.kakasi()
+        str = kks.convert(text)[0]['kana']
         # 拗音を拗音ではない文字にする。
         str = str.replace("ァ", "ア")
         str = str.replace("ィ", "イ")
@@ -288,10 +294,7 @@ def do_openai_4(text, wait=0):
     except Exception as e:
         if thread4 is None:
             return
-        if type(e).__name__.strip() == "Timeout":
-            do_set_text_4('ERROR: API問合せの時間切れです（課金すれば？）。')
-        else:
-            do_set_text_4('ERROR: 例外発生: ', type(e).__name__)
+        do_set_text_4('ERROR: 例外発生: ', type(e).__name__)
         # スレッドを無効化。
         thread4 = None
 

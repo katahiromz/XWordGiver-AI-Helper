@@ -12,6 +12,7 @@
     - python -m pip install openai
     - python -m pip install asyncio
     - python -m pip install pyperclip
+    - python -m pip install pykakasi
 3. OpenAIのChatGPTの公式ページをブラウザで開き、「Sign Up」「Log in」し、APIキーを取得して下さい。
 4. システムの詳細設定で環境変数「XW_OPENAI_API_KEY」を新たに作成し、ChatGPTのAPIキー（「sk-」から始まる）を指定して下さい。
 
