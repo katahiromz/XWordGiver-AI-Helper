@@ -6,12 +6,12 @@
 
 ## 準備
 
-1. まず最初に、Python 3.3以降をインストールして下さい。
+1. まず最初に、Python 3.3以降をインストールし、環境変数PATHを通して下さい。
 2. 次に、以下のコマンドを管理者権限のコマンドプロンプトで実行して下さい。
-    - pip install openai
-    - pip install asyncio
-    - pip install pyperclip
-    - pip install threading
+    - python -m pip install --upgrade pip
+    - python -m pip install openai
+    - python -m pip install asyncio
+    - python -m pip install pyperclip
 3. OpenAIのChatGPTの公式ページをブラウザで開き、「Sign Up」「Log in」し、APIキーを取得して下さい。
 4. システムの詳細設定で環境変数「XW_OPENAI_API_KEY」を新たに作成し、ChatGPTのAPIキー（「sk-」から始まる）を指定して下さい。
 
